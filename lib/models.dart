@@ -25,7 +25,7 @@ class BubbleState {
   final int colorIndex, number;
   bool isActive = true;
 
-  BubbleState({@required this.colorIndex, this.number});
+  BubbleState({required this.colorIndex, this.number = 0});
 }
 
 class Move {

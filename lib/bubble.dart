@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:audioplayers/audio_cache.dart';
+import 'package:audioplayers/audioplayers.dart';
 import 'code_files.dart';
 
 class Bubble extends StatefulWidget {
@@ -12,15 +12,15 @@ class Bubble extends StatefulWidget {
   final String colorName;
   final int index;
 
-  Bubble({
-    @required this.rule,
-    @required this.parentAction,
-    @required this.index,
-    @required this.ruleColour,
-    @required this.colour,
-    this.colorName,
-    this.ruleNumber,
-    this.number,
+  const Bubble({
+    required this.rule,
+    required this.parentAction,
+    required this.index,
+    required this.ruleColour,
+    required this.colour,
+    required this.colorName,
+    required this.ruleNumber,
+    required this.number,
   });
 
   @override
@@ -29,9 +29,9 @@ class Bubble extends StatefulWidget {
 
 class _BubbleState extends State<Bubble> {
   double width = 80;
-  Color color;
+  late Color color;
 
-  final AudioCache player = AudioCache();
+  final AudioPlayer player = AudioPlayer();
 
   @override
   void initState() {
@@ -41,13 +41,12 @@ class _BubbleState extends State<Bubble> {
 
   @override
   void dispose() {
-    player.clearCache();
-    color = null;
+    player.dispose();
     super.dispose();
   }
 
-  void _playSound() {
-    player.play('pop.mp3');
+  Future<void> _playSound() async {
+    await player.play(AssetSource('pop.mp3'));
   }
 
   @override
@@ -55,7 +54,8 @@ class _BubbleState extends State<Bubble> {
     return GestureDetector(
       onTap: () {
         _playSound();
-        Move move;
+        Move move = Move(widget.colorName, widget.index, false);
+
         switch (widget.rule) {
           case 'C':
             move = Move(widget.colorName, widget.index,
@@ -83,14 +83,12 @@ class _BubbleState extends State<Bubble> {
             .addPostFrameCallback((_) => widget.parentAction(move));
       },
       child: AnimatedContainer(
-        child: widget.number != null
-            ? Center(
-                child: Text(
-                  widget.number.toString(),
-                  style: TextStyle(fontSize: 20),
-                ),
-              )
-            : Container(),
+        child: Center(
+          child: Text(
+            widget.number.toString(),
+            style: TextStyle(fontSize: 20),
+          ),
+        ),
         height: width,
         width: width,
         duration: Duration(seconds: 1),

@@ -23,21 +23,18 @@ class _BubbleScreenState extends State<BubbleScreen> {
   };
 
   List<BubbleState> bubbles = [];
-  int level;
-
-  String rule;
-  String ruleColorName;
-  int ruleNumber;
-  int ruleCount;
-
-  Timer _timer;
+  late int level;
+  late String rule;
+  late String ruleColorName;
+  late int ruleNumber;
+  late int ruleCount;
+  late Timer _timer;
+  late Future<void> loadLevelFuture;
   int _start = 10;
 
   bool correctMove = true, showOverlay = false, gameOver = false;
 
   int popped = 0;
-
-  Future<void> loadLevelFuture;
 
   @override
   void initState() {
@@ -50,20 +47,19 @@ class _BubbleScreenState extends State<BubbleScreen> {
   Future<void> _loadLevel() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     level = prefs.getInt('level') ?? 0;
-  }
-
-  void _loadGame() {
     rule = kRules.keys.elementAt(random.nextInt(3));
     ruleColorName = colours.keys.elementAt(random.nextInt(colours.length));
-    ruleNumber = 1 + random.nextInt(6 - 1); // to ensure non-zero number always
+    ruleNumber = 1 + random.nextInt(5);
+  }
 
+  void _loadGame() async {
+    await loadLevelFuture;
     bubbles.clear();
     bubbles = List.generate(
-      // at least 18 bubbles, at most 30 bubbles
       (6 * 3) + random.nextInt((6 * 4) - 11),
-      (index) => BubbleState(
+          (index) => BubbleState(
         colorIndex: random.nextInt(colours.length),
-        number: rule.contains('N') ? index + 1 : null,
+        number: rule.contains('N') ? index + 1 : 0,
       ),
     );
 
@@ -72,12 +68,12 @@ class _BubbleScreenState extends State<BubbleScreen> {
     });
 
     bubbles.forEach(
-      (item) => colours.values.elementAt(item.colorIndex).incrementCount(),
+          (item) => colours.values.elementAt(item.colorIndex).incrementCount(),
     );
 
     switch (rule) {
       case 'C':
-        ruleCount = colours[ruleColorName].count;
+        ruleCount = colours[ruleColorName]!.count;
         break;
 
       case 'N':
@@ -87,9 +83,9 @@ class _BubbleScreenState extends State<BubbleScreen> {
       case 'NC':
         ruleCount = bubbles
             .where((element) =>
-                element.colorIndex ==
-                    colours.keys.toList().indexOf(ruleColorName) &&
-                element.number % ruleNumber == 0)
+        element.colorIndex ==
+            colours.keys.toList().indexOf(ruleColorName) &&
+            element.number % ruleNumber == 0)
             .length;
         break;
     }
@@ -102,10 +98,6 @@ class _BubbleScreenState extends State<BubbleScreen> {
         correctMove = true;
       });
     }
-
-//    colours.values.forEach((element) {
-//      print(element.count);
-//    });
   }
 
   @override
@@ -163,12 +155,12 @@ class _BubbleScreenState extends State<BubbleScreen> {
                     return bubbles[index].isActive
                         ? Bubble(
                             rule: rule,
-                            ruleColour: colours[ruleColorName].color,
+                            ruleColour: colours[ruleColorName]!.color,
                             colour: randColor,
                             // colorName used as key from colours map to manipulate colour count after a move
                             colorName: colorName,
-                            ruleNumber: rule.contains('N') ? ruleNumber : null,
-                            number: rule.contains('N') ? index + 1 : null,
+                            ruleNumber: rule.contains('N') ? ruleNumber : 0,
+                            number: rule.contains('N') ? index + 1 : 0,
                             parentAction: _updateMove,
                             index: index,
                           )
@@ -268,7 +260,7 @@ class _BubbleScreenState extends State<BubbleScreen> {
       correctMove = currentMove.isCorrectMove;
       popped++;
       bubbles[currentMove.index].isActive = false;
-      colours[currentMove.colorName].decrementCount();
+      colours[currentMove.colorName]!.decrementCount();
     });
 
     if (!correctMove)
@@ -312,7 +304,7 @@ class _BubbleScreenState extends State<BubbleScreen> {
 
   @override
   void dispose() {
-    if (_timer != null) _timer.cancel();
+    _timer.cancel();
     colours.clear();
     bubbles.clear();
     super.dispose();
