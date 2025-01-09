@@ -23,12 +23,12 @@ class _BubbleScreenState extends State<BubbleScreen> {
   };
 
   List<BubbleState> bubbles = [];
-  late int level;
-  late String rule;
-  late String ruleColorName;
-  late int ruleNumber;
-  late int ruleCount;
-  late Timer _timer;
+  int level = 0;
+  String rule = 'C';
+  String ruleColorName = 'Reds';
+  int ruleNumber = 1;
+  int ruleCount = 0;
+  Timer? _timer;
   late Future<void> loadLevelFuture;
   int _start = 10;
 
@@ -46,10 +46,12 @@ class _BubbleScreenState extends State<BubbleScreen> {
 
   Future<void> _loadLevel() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    level = prefs.getInt('level') ?? 0;
-    rule = kRules.keys.elementAt(random.nextInt(3));
-    ruleColorName = colours.keys.elementAt(random.nextInt(colours.length));
-    ruleNumber = 1 + random.nextInt(5);
+    setState(() {
+      level = prefs.getInt('level') ?? 0;
+      rule = kRules.keys.elementAt(random.nextInt(3));
+      ruleColorName = colours.keys.elementAt(random.nextInt(colours.length));
+      ruleNumber = 1 + random.nextInt(5);
+    });
   }
 
   void _loadGame() async {
@@ -57,7 +59,7 @@ class _BubbleScreenState extends State<BubbleScreen> {
     bubbles.clear();
     bubbles = List.generate(
       (6 * 3) + random.nextInt((6 * 4) - 11),
-          (index) => BubbleState(
+      (index) => BubbleState(
         colorIndex: random.nextInt(colours.length),
         number: rule.contains('N') ? index + 1 : 0,
       ),
@@ -68,7 +70,7 @@ class _BubbleScreenState extends State<BubbleScreen> {
     });
 
     bubbles.forEach(
-          (item) => colours.values.elementAt(item.colorIndex).incrementCount(),
+      (item) => colours.values.elementAt(item.colorIndex).incrementCount(),
     );
 
     switch (rule) {
@@ -83,9 +85,9 @@ class _BubbleScreenState extends State<BubbleScreen> {
       case 'NC':
         ruleCount = bubbles
             .where((element) =>
-        element.colorIndex ==
-            colours.keys.toList().indexOf(ruleColorName) &&
-            element.number % ruleNumber == 0)
+                element.colorIndex ==
+                    colours.keys.toList().indexOf(ruleColorName) &&
+                element.number % ruleNumber == 0)
             .length;
         break;
     }
@@ -304,7 +306,7 @@ class _BubbleScreenState extends State<BubbleScreen> {
 
   @override
   void dispose() {
-    _timer.cancel();
+    _timer?.cancel();
     colours.clear();
     bubbles.clear();
     super.dispose();
